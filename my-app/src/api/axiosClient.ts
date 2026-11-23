@@ -13,7 +13,7 @@ axiosClient.interceptors.response.use(
   (response) => {
     const payload = response.data as ApiResponse<unknown>;
 
-    if (!payload.success) {
+    if (payload.success === false) {
       return Promise.reject(
         new Error(payload.message || "Unable to complete the request."),
       );
