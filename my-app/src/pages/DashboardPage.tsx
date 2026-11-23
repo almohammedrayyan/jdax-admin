@@ -36,15 +36,15 @@ export default function DashboardPage() {
     day: "numeric",
     month: "short",
   }).format(now);
-  const totalViews = visitors?.latest.totalViews ?? 0;
-  const snapshotDate = visitors?.latest.snapshotDate
+  const totalViews = visitors?.totalViews ?? 0;
+  const snapshotDate = visitors?.snapshotDate
     ? new Intl.DateTimeFormat("en-US", {
         day: "numeric",
         month: "short",
         year: "numeric",
         hour: "numeric",
         minute: "2-digit",
-      }).format(new Date(visitors.latest.snapshotDate))
+      }).format(new Date(visitors.snapshotDate))
     : "No saved data yet";
   const formattedTotalViews = totalViews.toLocaleString();
   return (
