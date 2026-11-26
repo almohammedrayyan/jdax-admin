@@ -5,8 +5,8 @@ export const CONTENT_CATEGORIES = ["upsc", "tnpsc", "ssc", "rrb", "banking", "co
 export const TNPSC_GROUPS = ["group-1", "group-2", "group-4"] as const;
 export type ContentCategory = (typeof CONTENT_CATEGORIES)[number];
 export type TnpscGroup = (typeof TNPSC_GROUPS)[number];
-export type ContentSchedule = { _id: string; category: ContentCategory; group: TnpscGroup | null; title: string; scheduledAt: string; createdAt?: string };
-export type ContentScheduleForm = Pick<ContentSchedule, "category" | "group" | "title" | "scheduledAt">;
+export type ContentSchedule = { _id: string; category: ContentCategory; group: TnpscGroup | null; title: string; venue?: string; scheduledAt: string; createdAt?: string };
+export type ContentScheduleForm = Pick<ContentSchedule, "category" | "group" | "title" | "venue" | "scheduledAt">;
 
 export const contentScheduleApi = createApi({
   reducerPath: "contentScheduleApi", baseQuery: axiosBaseQuery(), tagTypes: ["ContentSchedule"],
