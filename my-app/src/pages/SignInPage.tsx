@@ -1,8 +1,9 @@
-import { LockOutlined, MailOutlined, VisibilityOutlined } from '@mui/icons-material'
+import { VisibilityOutlined } from '@mui/icons-material'
 import { Alert, Box, Button, Card, CardContent, IconButton, InputAdornment, TextField, Typography } from '@mui/material'
 import { useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { login } from '../services/authApi'
+import { saveSession } from '../auth/session'
 
 export default function SignInPage() {
   const navigate = useNavigate()
@@ -18,8 +19,7 @@ export default function SignInPage() {
     setSaving(true)
     try {
       const result = await login(email.trim(), password)
-      sessionStorage.setItem('jdax_admin_token', result.token)
-      sessionStorage.setItem('jdax_admin_user', JSON.stringify(result.user))
+      saveSession(result.token, result.user)
       navigate('/dashboard', { replace: true })
     } catch (err) { setError(err instanceof Error ? err.message : 'Unable to sign in.') }
     finally { setSaving(false) }
@@ -31,9 +31,9 @@ export default function SignInPage() {
       {location.state?.registered && <Alert severity="success" sx={{ mb: 2 }}>Account created. Please sign in.</Alert>}
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       <Typography className="fieldLabel">Email</Typography>
-      <TextField required fullWidth placeholder="Enter your email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} size="small" sx={{ mb: 2.6 }} slotProps={{ input: { startAdornment: <InputAdornment position="start"><MailOutlined /></InputAdornment> } }} />
+      <TextField required fullWidth placeholder="Enter your email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} size="small" sx={{ mb: 2.6 }} />
       <Typography className="fieldLabel">Password</Typography>
-      <TextField required fullWidth placeholder="Enter your password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} size="small" slotProps={{ input: { startAdornment: <InputAdornment position="start"><LockOutlined /></InputAdornment>, endAdornment: <InputAdornment position="end"><IconButton edge="end" size="small" aria-label={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword(!showPassword)}><VisibilityOutlined /></IconButton></InputAdornment> } }} />
+      <TextField required fullWidth placeholder="Enter your password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} size="small" slotProps={{ input: { endAdornment: <InputAdornment position="end"><IconButton edge="end" size="small" aria-label={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword(!showPassword)}><VisibilityOutlined /></IconButton></InputAdornment> } }} />
       <Box sx={{ mb: 2 }} />
       <Button fullWidth type="submit" size="large" variant="contained" className="signInButton" disabled={saving}>{saving ? 'Signing in…' : 'Sign In'}</Button>
       <Typography sx={{ mt: 2, textAlign: 'center' }} variant="body2">New to JDAX? <Link to="/sign-up">Sign up</Link></Typography>

@@ -58,6 +58,10 @@ export const contentScheduleApi = createApi({
       }),
       invalidatesTags: [{ type: "ContentSchedule", id: "LIST" }],
     }),
+    createBulkContentSchedules: builder.mutation<ContentSchedule[], ContentScheduleForm[]>({
+      query: (rows) => ({ url: "/api/content-schedules/bulk", method: "POST", data: { rows } }),
+      invalidatesTags: [{ type: "ContentSchedule", id: "LIST" }],
+    }),
     updateContentSchedule: builder.mutation<
       ContentSchedule,
       { id: string; data: ContentScheduleForm }
@@ -87,6 +91,7 @@ export const contentScheduleApi = createApi({
 export const {
   useGetContentSchedulesQuery,
   useCreateContentScheduleMutation,
+  useCreateBulkContentSchedulesMutation,
   useUpdateContentScheduleMutation,
   useDeleteContentScheduleMutation,
 } = contentScheduleApi;

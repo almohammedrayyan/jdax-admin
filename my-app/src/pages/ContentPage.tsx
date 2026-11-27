@@ -24,6 +24,7 @@ import {
   type GridColDef,
 } from "@mui/x-data-grid";
 import { useMemo, useState } from "react";
+import BulkScheduleDialog from "../components/BulkScheduleDialog";
 import {
   CONTENT_CATEGORIES,
   TNPSC_GROUPS,
@@ -100,6 +101,8 @@ export default function ContentPage() {
   const [form, setForm] = useState<FormValues>(emptyForm);
   const [editing, setEditing] = useState<ContentSchedule | null>(null);
   const [open, setOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [success, setSuccess] = useState("");
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
   const {
@@ -234,12 +237,14 @@ export default function ContentPage() {
   );
   return (
     <Box className="contentPage">
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, justifyContent: "space-between", mb: 3 }}>
         <Typography variant="h4">Content Schedule</Typography>
-        <Button variant="contained" startIcon={<Add />} onClick={openCreate}>
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}><Button variant="outlined" onClick={() => setBulkOpen(true)}>Import CSV / Excel</Button><Button variant="contained" startIcon={<Add />} onClick={openCreate}>
           Create Content
-        </Button>
+        </Button></Box>
       </Box>
+      {success && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess("")}>{success}</Alert>}
+      <BulkScheduleDialog open={bulkOpen} onClose={() => setBulkOpen(false)} onSuccess={(count) => setSuccess(`${count} schedules imported successfully.`)} />
       {error && !open && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
           {error}

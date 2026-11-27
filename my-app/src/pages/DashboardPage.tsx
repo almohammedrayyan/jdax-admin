@@ -1,40 +1,26 @@
-import { ArrowUpward, MoreHoriz, TrendingUp } from "@mui/icons-material";
-import { Box, Button, Chip, IconButton, Typography } from "@mui/material";
+import { ArrowUpward, CalendarMonthOutlined, LocationOnOutlined, TrendingUp, VideocamOutlined } from "@mui/icons-material";
+import { Box, Button, Chip, Typography } from "@mui/material";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useGetDashboardVisitorsQuery } from "../services/dashboardVisitorApi";
-
-const schedule = [
-  {
-    time: "09:30",
-    platform: "in",
-    title: "Customer story: building a better workflow",
-    state: "LinkedIn",
-  },
-  {
-    time: "12:00",
-    platform: "ig",
-    title: "Behind the scenes with the product team",
-    state: "Instagram",
-  },
-  {
-    time: "16:45",
-    platform: "fb",
-    title: "Your weekly industry round-up",
-    state: "Facebook",
-  },
-];
+import { useGetContentSchedulesQuery } from "../services/contentScheduleApi";
 
 export default function DashboardPage() {
   const { data: visitors } = useGetDashboardVisitorsQuery();
+  const { data: schedules = [], isLoading: schedulesLoading, isError: schedulesError } = useGetContentSchedulesQuery(undefined, { pollingInterval: 60000, refetchOnMountOrArgChange: true });
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setCurrentTime(Date.now()), 60000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const upcoming = schedules
+    .filter((item) => Number.isFinite(new Date(item.scheduledAt).getTime()) && new Date(item.scheduledAt).getTime() >= currentTime)
+    .slice().sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()).slice(0, 5);
 
   const now = new Date();
   const overviewDate = new Intl.DateTimeFormat("en-US", {
     month: "long",
     year: "numeric",
-  }).format(now);
-  const todayDate = new Intl.DateTimeFormat("en-US", {
-    weekday: "long",
-    day: "numeric",
-    month: "short",
   }).format(now);
   const totalViews = visitors?.totalViews ?? 0;
   const snapshotDate = visitors?.snapshotDate
@@ -146,31 +132,30 @@ export default function DashboardPage() {
         <Box className="panel schedulePanel">
           <Box className="panelHeader">
             <Box>
-              <Typography className="panelTitle">Up next</Typography>
-              <Typography className="panelHint">Today · {todayDate}</Typography>
+              <Typography className="panelTitle">Content schedule</Typography>
+              <Typography className="panelHint">Next five upcoming events · IST</Typography>
             </Box>
-            <Button size="small" className="textAction" href="/content">
+            <Button size="small" className="textAction" component={Link} to="/calendar" startIcon={<CalendarMonthOutlined />}>
               View calendar
             </Button>
           </Box>
           <Box className="scheduleList">
-            {schedule.map((item) => (
-              <Box className="scheduleItem" key={item.time}>
-                <Typography className="scheduleTime">{item.time}</Typography>
+            {schedulesLoading ? <Typography color="text.secondary" variant="body2">Loading upcoming events...</Typography> : schedulesError ? <Typography color="error" variant="body2">Unable to load upcoming events.</Typography> : upcoming.length === 0 ? <Typography color="text.secondary" variant="body2">No upcoming events scheduled.</Typography> : upcoming.map((item) => (
+              <Box className="scheduleItem" key={item._id} sx={{ gridTemplateColumns: "4.8rem 0.75rem minmax(0, 1fr) !important", columnGap: { xs: "0.35rem", sm: "0.65rem" } }}>
+                <Box className="scheduleTime"><Typography component="span" sx={{ display: "block", fontSize: "inherit", fontWeight: "inherit", whiteSpace: "nowrap" }}>{new Intl.DateTimeFormat("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true, timeZone: "Asia/Kolkata" }).format(new Date(item.scheduledAt))}</Typography><Typography component="span" sx={{ display: "block", fontSize: "0.65rem", fontWeight: 400, whiteSpace: "nowrap" }}>{new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" }).format(new Date(item.scheduledAt))}</Typography></Box>
                 <Box className="scheduleLine">
                   <i />
                 </Box>
                 <Box className="scheduleCopy">
                   <Typography>{item.title}</Typography>
-                  <Chip
+                  <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1, mt: 0.5 }}><Chip
                     size="small"
-                    label={item.state}
-                    className={`scheduleChip ${item.platform}`}
+                    label={`${item.category.toUpperCase()}${item.group ? ` · ${item.group.replace("group-", "G")}` : ""}`}
+                    className="scheduleChip in"
+                    sx={{ marginTop: "0 !important" }}
                   />
+                  {item.venue && <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.4, minWidth: 0, color: "text.secondary" }}>{/\bonline\b/i.test(item.venue) ? <VideocamOutlined sx={{ fontSize: 15, flexShrink: 0 }} /> : <LocationOnOutlined sx={{ fontSize: 15, flexShrink: 0 }} />}<Typography variant="caption" sx={{ overflowWrap: "anywhere" }}>{item.venue}</Typography></Box>}</Box>
                 </Box>
-                <IconButton size="small">
-                  <MoreHoriz />
-                </IconButton>
               </Box>
             ))}
           </Box>

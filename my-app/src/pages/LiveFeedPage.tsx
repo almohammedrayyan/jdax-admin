@@ -1,4 +1,4 @@
-import { Add, DeleteOutlined, EditOutlined, Search } from "@mui/icons-material";
+import { Add, Search } from "@mui/icons-material";
 import {
   Alert,
   Box,
@@ -14,7 +14,6 @@ import {
 } from "@mui/material";
 import {
   DataGrid,
-  GridActionsCellItem,
   type GridColDef,
 } from "@mui/x-data-grid";
 import { useMemo, useState } from "react";
@@ -24,9 +23,7 @@ import {
   type LiveFeedForm,
   type Platform,
   useCreateLiveFeedMutation,
-  useDeleteLiveFeedMutation,
   useGetLiveFeedsQuery,
-  useUpdateLiveFeedMutation,
 } from "../services/liveFeedApi";
 
 type LiveFeedFormValues = Omit<LiveFeedForm, "platform"> & {
@@ -51,7 +48,6 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 export default function LiveFeedPage() {
   const [form, setForm] = useState<LiveFeedFormValues>(emptyForm);
-  const [editingFeed, setEditingFeed] = useState<LiveFeed | null>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
@@ -62,25 +58,14 @@ export default function LiveFeedPage() {
   } = useGetLiveFeedsQuery();
   const [createLiveFeed, { isLoading: isCreating }] =
     useCreateLiveFeedMutation();
-  const [updateLiveFeed, { isLoading: isUpdating }] =
-    useUpdateLiveFeedMutation();
-  const [deleteLiveFeed] = useDeleteLiveFeedMutation();
-  const saving = isCreating || isUpdating;
+  const saving = isCreating;
   const closeDialog = () => {
     setOpen(false);
-    setEditingFeed(null);
     setForm(emptyForm);
     setError("");
   };
   const openCreate = () => {
-    setEditingFeed(null);
     setForm(emptyForm);
-    setError("");
-    setOpen(true);
-  };
-  const openEdit = (feed: LiveFeed) => {
-    setEditingFeed(feed);
-    setForm({ platform: feed.platform, accountId: feed.accountId ?? "" });
     setError("");
     setOpen(true);
   };
@@ -90,23 +75,10 @@ export default function LiveFeedPage() {
       return;
     }
     try {
-      if (editingFeed)
-        await updateLiveFeed({
-          id: editingFeed._id,
-          data: form as LiveFeedForm,
-        }).unwrap();
-      else await createLiveFeed(form as LiveFeedForm).unwrap();
+      await createLiveFeed(form as LiveFeedForm).unwrap();
       closeDialog();
     } catch (err) {
       setError(getErrorMessage(err, "Unable to save the live feed."));
-    }
-  };
-  const deleteFeed = async (id: string) => {
-    if (!window.confirm("Delete this live feed?")) return;
-    try {
-      await deleteLiveFeed(id).unwrap();
-    } catch (err) {
-      setError(getErrorMessage(err, "Unable to delete the live feed."));
     }
   };
   const columns: GridColDef<LiveFeed>[] = [
@@ -134,26 +106,6 @@ export default function LiveFeedPage() {
               year: "numeric",
             }).format(new Date(String(value)))
           : "—",
-    },
-    {
-      field: "actions",
-      type: "actions",
-      headerName: "Actions",
-      width: 110,
-      getActions: ({ row }) => [
-        <GridActionsCellItem
-          key="edit"
-          icon={<EditOutlined sx={{ color: "primary.main" }} />}
-          label="Edit"
-          onClick={() => openEdit(row)}
-        />,
-        <GridActionsCellItem
-          key="delete"
-          icon={<DeleteOutlined sx={{ color: "error.main" }} />}
-          label="Delete"
-          onClick={() => void deleteFeed(row._id)}
-        />,
-      ],
     },
   ];
   const filteredRows = useMemo(
@@ -219,7 +171,7 @@ export default function LiveFeedPage() {
         maxWidth="sm"
       >
         <DialogTitle>
-          {editingFeed ? "Update live feed" : "Create live feed"}
+          Create live feed
         </DialogTitle>
         <DialogContent>
           {error && (
@@ -267,7 +219,7 @@ export default function LiveFeedPage() {
             onClick={() => void saveFeed()}
             disabled={saving}
           >
-            {saving ? "Saving..." : editingFeed ? "Update" : "Create"}
+            {saving ? "Saving..." : "Create"}
           </Button>
         </DialogActions>
       </Dialog>

@@ -1,41 +1,26 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { CalendarMonthOutlined, CampaignOutlined, DashboardOutlined, NotificationsNone, Search } from '@mui/icons-material'
 import { AppBar, Avatar, Box, Button, Divider, Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Menu, MenuItem, Toolbar, Typography } from '@mui/material'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { getCurrentUser, logout, type AuthUser } from '../services/authApi'
+import { logout, type AuthUser } from '../services/authApi'
+import { clearSession, getValidToken, USER_KEY } from '../auth/session'
 
 const links = [[DashboardOutlined, 'Overview', '/dashboard'], [CampaignOutlined, 'Social Live Feed', '/live-feed'], [CalendarMonthOutlined, 'Content Schedule', '/content']] as const
 
 export default function AppLayout() {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null)
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    try { return JSON.parse(sessionStorage.getItem('jdax_admin_user') || 'null') } catch { return null }
+  const [user] = useState<AuthUser | null>(() => {
+    try { return JSON.parse(localStorage.getItem(USER_KEY) || 'null') } catch { return null }
   })
   const [loggingOut, setLoggingOut] = useState(false)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const token = sessionStorage.getItem('jdax_admin_token')
-    if (!token) return
-    let active = true
-    getCurrentUser(token).then((current) => {
-      if (!active) return
-      setUser(current)
-      sessionStorage.setItem('jdax_admin_user', JSON.stringify(current))
-    }).catch(() => {
-      if (!active) return
-      try { setUser(JSON.parse(sessionStorage.getItem('jdax_admin_user') || 'null')) } catch { setUser(null) }
-    })
-    return () => { active = false }
-  }, [])
-
   const handleLogout = async () => {
     setLoggingOut(true)
-    const token = sessionStorage.getItem('jdax_admin_token')
+    const token = getValidToken()
     try { if (token) await logout(token) } catch (error) { console.error('Logout request failed:', error) }
     finally {
-      sessionStorage.removeItem('jdax_admin_token')
-      sessionStorage.removeItem('jdax_admin_user')
+      clearSession()
       setAnchor(null)
       navigate('/sign-in', { replace: true })
     }
