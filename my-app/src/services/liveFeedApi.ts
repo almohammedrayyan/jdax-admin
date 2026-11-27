@@ -6,10 +6,10 @@ export type Platform = (typeof PLATFORM_OPTIONS)[number];
 export type LiveFeed = {
   _id: string;
   platform: Platform;
-  link: string;
+  accountId: string;
   createdAt?: string;
 };
-export type LiveFeedForm = { platform: Platform; link: string };
+export type LiveFeedForm = { platform: Platform; accountId: string };
 
 export const liveFeedApi = createApi({
   reducerPath: "liveFeedApi",

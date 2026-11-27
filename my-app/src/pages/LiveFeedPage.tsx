@@ -32,7 +32,7 @@ import {
 type LiveFeedFormValues = Omit<LiveFeedForm, "platform"> & {
   platform: Platform | "";
 };
-const emptyForm: LiveFeedFormValues = { platform: "", link: "" };
+const emptyForm: LiveFeedFormValues = { platform: "", accountId: "" };
 
 function getErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error) return error.message;
@@ -80,13 +80,13 @@ export default function LiveFeedPage() {
   };
   const openEdit = (feed: LiveFeed) => {
     setEditingFeed(feed);
-    setForm({ platform: feed.platform, link: feed.link });
+    setForm({ platform: feed.platform, accountId: feed.accountId ?? "" });
     setError("");
     setOpen(true);
   };
   const saveFeed = async () => {
-    if (!form.platform || !form.link.trim()) {
-      setError("Please select a platform and enter a link.");
+    if (!form.platform || !form.accountId.trim()) {
+      setError("Please select a platform and enter an account ID.");
       return;
     }
     try {
@@ -118,14 +118,9 @@ export default function LiveFeedPage() {
         String(value).replace(/^./, (char) => char.toUpperCase()),
     },
     {
-      field: "link",
-      headerName: "Live link",
+      field: "accountId",
+      headerName: "Account ID",
       flex: 3,
-      renderCell: ({ value }) => (
-        <a href={String(value)} target="_blank" rel="noreferrer">
-          {String(value)}
-        </a>
-      ),
     },
     {
       field: "createdAt",
@@ -164,7 +159,7 @@ export default function LiveFeedPage() {
   const filteredRows = useMemo(
     () =>
       rows.filter((row) =>
-        `${row.platform} ${row.link}`
+        `${row.platform} ${row.accountId ?? ""}`
           .toLowerCase()
           .includes(query.toLowerCase()),
       ),
@@ -255,12 +250,11 @@ export default function LiveFeedPage() {
           <TextField
             fullWidth
             required
-            label="Live link"
-            placeholder="https://..."
-            type="url"
-            value={form.link}
+            label="Account ID"
+            placeholder="Enter the account ID"
+            value={form.accountId}
             onChange={(e) =>
-              setForm((current) => ({ ...current, link: e.target.value }))
+              setForm((current) => ({ ...current, accountId: e.target.value }))
             }
           />
         </DialogContent>
